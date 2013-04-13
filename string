@@ -1,0 +1,5 @@
+      invoke  active_record
+      remove    db/migrate/20130410205457_create_users.rb
+      remove    app/models/user.rb
+      invoke    rspec
+      remove      spec/models/user_spec.rb
