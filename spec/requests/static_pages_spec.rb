@@ -55,6 +55,6 @@ describe "Static pages" do
     page.should have_title full_title('Sign up')
     click_link "sample app"
     page.should have_title full_title('')
-  end
-  
+    page.should_not have_title('|')
+  end  
 end

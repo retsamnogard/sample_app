@@ -42,6 +42,9 @@ describe "Authentication" do
       describe "followed by signout" do
         before { click_link 'Sign out' }
         it { should have_link('Sign in') }
+        it { should_not have_link('Profile') }
+        it { should_not have_link('Settings') }
+        it { should_not have_link('Sign out') }
       end
     end
   end # describe "signin"
@@ -64,8 +67,20 @@ describe "Authentication" do
           it "should render the desired protected page" do
             page.should have_title 'Edit user'
           end
+
+          describe "then signing out and back in again" do
+            before do
+              click_link 'Sign out'
+              sign_in user
+            end
+
+            it "should render the user's profile, not the previously " +
+               "requested page." do
+              page.should have_title user.name
+            end
+          end
         end
-      end
+      end # describe "when attempting to visit a protected page"
 
       describe "in the Users controller" do
 
@@ -111,6 +126,22 @@ describe "Authentication" do
       describe "submitting a DELETE request to the Users#destroy action" do
         before { delete user_path(user) }
         specify { response.should redirect_to(root_path) }        
+      end
+    end
+
+    describe "as a signed-in user" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user }
+
+      describe "attempting to access Users#new action" do
+        before { visit new_user_path }
+        it { should_not have_title "|" }
+        it { should have_notice "Please sign out to make a new account." }
+      end
+
+      describe "submitting a POST request to the Users#create action" do
+        before { post users_path }
+        specify { response.should redirect_to(root_path) }
       end
     end
   end # describe "authorization"

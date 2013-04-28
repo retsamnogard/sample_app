@@ -2,15 +2,11 @@ class UsersController < ApplicationController
   before_filter :signed_in_user, only: [:edit, :update, :index]
   before_filter :correct_user,   only: [:edit, :update]
   before_filter :admin_user,     only: :destroy
+  before_filter :not_signed_in,  only: [:new, :create]
 
 
   def show
     @user = User.find(params[:id])
-  end
-
-  def index
-    @users = User.paginate(page: params[:page])
-    session[:users_index_page_num] = params[:page]
   end
 
   def new
@@ -41,11 +37,19 @@ class UsersController < ApplicationController
     end
   end
 
+  def index
+    @users = User.paginate(page: params[:page])
+  end
+
   def destroy
-    User.find(params[:id]).destroy
-    flash[:success] = "User destroyed."
-    redirect_to controller: 'users', action: 'index',
-                page: session[:users_index_page_num]
+    user = User.find(params[:id])
+    unless current_user?(user)
+      user.destroy
+      flash[:success] = "User destroyed."
+    else
+      flash[:error] = "A user cannot delete oneself."
+    end
+    redirect_to users_path({ page: params[:page] })
   end
 
   private
@@ -64,5 +68,11 @@ class UsersController < ApplicationController
 
     def admin_user
       redirect_to(root_path) unless current_user.admin?
+    end
+
+    def not_signed_in
+      if signed_in?
+        redirect_to root_path, notice: "Please sign out to make a new account."
+      end
     end
 end
